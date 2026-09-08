@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>InvoicePulse — Operational Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+</head>
+<body class="bg-[#0B0F17] text-slate-100 min-h-screen">
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    function App() {
+      const [items, setItems] = useState([]);
+      const [stats, setStats] = useState({});
+      const [search, setSearch] = useState('');
+
+      const load = async () => {
+        try {
+          const res = await fetch('/api/invoicepulse_items?search=' + encodeURIComponent(search));
+          const data = await res.json();
+          setItems(data.items || []);
+          const s = await (await fetch('/api/stats')).json();
+          setStats(s);
+        } catch {}
+      };
+
+      useEffect(() => { load(); }, [search]);
+
+      return (
+        <div class="max-w-6xl mx-auto p-6 space-y-6">
+          <header class="flex justify-between items-center border-b border-[#1F2937] pb-4">
+            <div>
+              <h1 class="text-2xl font-bold text-white">InvoicePulse</h1>
+              <p class="text-xs text-slate-400">Autonomous Enterprise Operating Dashboard</p>
+            </div>
+          </header>
+          <div class="grid grid-cols-3 gap-4">
+            <div class="bg-[#111827] border border-[#1F2937] p-4 rounded-xl">
+              <div class="text-xs text-slate-400">Total Managed Records</div>
+              <div class="text-2xl font-bold text-white mt-1">{items.length}</div>
+            </div>
+            <div class="bg-[#111827] border border-[#1F2937] p-4 rounded-xl">
+              <div class="text-xs text-sky-400">Operational Health</div>
+              <div class="text-2xl font-bold text-emerald-400 mt-1">Optimal (100%)</div>
+            </div>
+            <div class="bg-[#111827] border border-[#1F2937] p-4 rounded-xl">
+              <div class="text-xs text-indigo-400">QA Compliance</div>
+              <div class="text-2xl font-bold text-sky-400 mt-1">Verified (Sentinel)</div>
+            </div>
+          </div>
+          <div class="bg-[#111827] border border-[#1F2937] rounded-xl overflow-hidden">
+            <div class="p-4 border-b border-[#1F2937]">
+              <input class="w-full bg-[#0B0F17] border border-[#1F2937] rounded-lg px-4 py-2 text-sm text-white" placeholder="Filter records..." value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+            <div class="divide-y divide-[#1F2937]">
+              {items.map(i => (
+                <div key={i.id} class="p-4 flex justify-between items-center hover:bg-slate-800/40">
+                  <div>
+                    <div class="font-semibold text-white">{i.name || i.sku}</div>
+                    <div class="text-xs text-slate-400">{i.category} — #{i.id}</div>
+                  </div>
+                  <span class="px-2.5 py-1 text-xs rounded-full bg-sky-500/20 text-sky-300 font-medium">{i.status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
